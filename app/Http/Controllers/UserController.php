@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class UserController extends BaseController
@@ -14,13 +16,17 @@ class UserController extends BaseController
     use ValidatesRequests;
 
     /**
-     * @return View
+     * @return View|JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
+        $users = User::paginate(2);
 
-        return view('users', ['users' => $users]);
+        if ($request->ajax()) {
+            return response()->json(['users' => $users, 'pagination' => (string)$users->links('pagination::bootstrap-5')], 200);
+        }
+
+        return view('users', compact('users'));
     }
 
     /**
@@ -32,13 +38,22 @@ class UserController extends BaseController
         $request->validate([
             'name'       => 'required|max:255',
             'password' => 'required',
+            'photo' => 'required|image|mimes:jpeg,png|max:2048',
         ]);
 
         $user = User::updateOrCreate([
-            'id' => $request->id], [
-            'name' => $request->name,
-            'password' => $request->password
+            'id' => $request->input('id')], [
+            'name' => $request->input('name'),
+            'password' => $request->input('password')
         ]);
+
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+
+            $fileName = $user->id . "." . $photo->getClientOriginalExtension();
+            $request->file('photo')->move(public_path('user-photo'), $fileName);
+            $user->update(['photo' => $fileName]);
+        }
 
         return response()->json(['message'=>'Запись успешно создана','data' => $user], 200);
 
@@ -54,6 +69,7 @@ class UserController extends BaseController
         $request->validate([
             'name'       => 'required|max:255',
             'password' => 'required',
+            'photo' => 'required|image|mimes:jpeg,png|max:2048',
         ]);
 
         $user = User::find($id);
@@ -61,6 +77,12 @@ class UserController extends BaseController
         if($user) {
             $user->name = $request->input('name');
             $user->password = $request->input('password');
+            if ($request->hasFile('photo')) {
+                $photo = $request->file('photo');
+                $fileName = $user->id . "." . $photo->getClientOriginalExtension();
+                $request->file('photo')->move(public_path('user-photo'), $fileName);
+                $user->photo = $fileName;
+            }
 
             $user->update();
 

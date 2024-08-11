@@ -23,6 +23,10 @@
                         <label for="">Пароль</label>
                         <input type="text" required class="password form-control">
                     </div>
+                    <div class="form-group mb-3">
+                        <label for="">Фото</label>
+                        <input type="file" name="photo" class="photo form-control">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
@@ -57,6 +61,14 @@
                         <label for="">Пароль</label>
                         <input type="text" id="password" required class="form-control">
                     </div>
+                    <div class="form-group mb-3">
+                        <label for="">Фото</label>
+                        <input type="file" id="photo" class="form-control">
+                        <div>
+                            <img class="imgPreview img img-circle"
+                                 width="80" src=""/>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
@@ -74,11 +86,11 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Delete User Data</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Удалить</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                 </div>
                 <div class="modal-body">
-                    <h4>Confirm to Delete Data ?</h4>
+                    <h4>Удалить пользователя?</h4>
                     <input type="hidden" id="delete_id">
                 </div>
                 <div class="modal-footer">
@@ -99,9 +111,9 @@
                 <div class="card">
                     <div class="card-header">
                         <h4>
-                            User Data
+                            Пользователи
                             <button id="add" type="button" class="btn btn-primary float-end" data-bs-toggle="modal"
-                                    data-bs-target="#AddUserModal">Add User</button>
+                                    data-bs-target="#AddUserModal">Добавить пользователя</button>
                         </h4>
                     </div>
                     <div class="card-body">
@@ -120,6 +132,7 @@
                         </table>
                     </div>
                 </div>
+                {!! $users->links('pagination::bootstrap-5') !!}
             </div>
         </div>
     </div>
@@ -131,17 +144,18 @@
     <script>
         $(document).ready(function () {
 
-            fetchUser();
+            var page=1;
+            getUsers();
 
-            function fetchUser() {
+            function getUsers(page) {
                 $.ajax({
                     type: "GET",
-                    url: "/",
+                    url: "/?page="+page,
                     dataType: "json",
                     success: function (response) {
                         // console.log(response);
                         $('tbody').html("");
-                        $.each(response.users, function (key, item) {
+                        $.each(response.users.data, function (key, item) {
                             $('tbody').append('<tr>\
                             <td>' + item.id + '</td>\
                             <td>' + item.name + '</td>\
@@ -150,6 +164,7 @@
                             <td><button type="button" value="' + item.id + '" class="btn btn-danger delete-btn btn-sm">Удалить</button></td>\
                         \</tr>');
                         });
+                        $('.pagination').html(response.pagination);
                     }
                 });
             }
@@ -159,10 +174,10 @@
 
                 $(this).text('Отправка...');
 
-                var data = {
-                    'name': $('.name').val(),
-                    'password': $('.password').val(),
-                }
+                var data = new FormData();
+                data.append('name', $('.name').val());
+                data.append('password', $('.password').val());
+                data.append('photo', $('.photo').prop('files')[0]);
 
                 $.ajaxSetup({
                     headers: {
@@ -174,7 +189,10 @@
                     type: "POST",
                     url: "/",
                     data: data,
-                    dataType: "json",
+                    processData: false,
+                    contentType: false,
+                    enctype: 'multipart/form-data',
+                    cache: false,
                     success: function (response) {
                         // console.log(response);
                         $('#save_msgList').html("");
@@ -184,7 +202,7 @@
                         $('.add_user').text('Сохранить');
                         $('#AddUserModal').modal('hide');
 
-                        fetchUser();
+                        getUsers(page);
                     },
                     error: function (response) {
                         $('#save_msgList').html("");
@@ -206,16 +224,15 @@
                     type: "GET",
                     url: "/" + user_id,
                     success: function (response) {
-                        if (response.status == 404) {
-                            $('#success_message').addClass('alert alert-success');
-                            $('#success_message').text(response.message);
-                            $('#editModal').modal('hide');
-                        } else {
-                            // console.log(response.user.name);
-                            $('#name').val(response.user.name);
-                            $('#password').val(response.user.password);
-                            $('#user_id').val(user_id);
-                        }
+                        // console.log(response.user.name);
+                        $('#name').val(response.name);
+                        $('#password').val(response.password);
+                        $('#user_id').val(user_id);
+                    },
+                    error: function (response) {
+                        $('#success_message').addClass('alert alert-success');
+                        $('#success_message').text(response.message);
+                        $('#editModal').modal('hide');
                     }
                 });
                 //$('.btn-close').find('input').val('');
@@ -255,7 +272,7 @@
                         $('.update_user').text('Update');
                         $('#editModal').modal('hide');
 
-                        fetchUser();
+                        getUsers(page);
                     },
                     error: function (response) {
                         $('#update_msgList').html("");
@@ -277,7 +294,7 @@
             $(document).on('click', '.delete_user', function (e) {
                 e.preventDefault();
 
-                $(this).text('Deleting...');
+                $(this).text('Отправка...');
                 var id = $('#delete_id').val();
 
                 $.ajaxSetup({
@@ -298,7 +315,7 @@
                         $('.delete_user').text('Удалено');
                         $('#DeleteModal').modal('hide');
 
-                        fetchUser();
+                        getUsers(page);
                     },
                     error: function (response) {
                         $('#success_message').addClass('alert alert-success');
@@ -308,7 +325,16 @@
 
                 });
             });
+            $(document).on('click', '.pagination a',function(event)
+            {
+                $('li').removeClass('active');
+                $(this).parent('li').addClass('active');
+                event.preventDefault();
 
+                page=$(this).attr('href').split('page=')[1];
+
+                getUsers(page);
+            });
         });
 
     </script>
