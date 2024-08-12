@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class UserController extends BaseController
@@ -36,16 +37,23 @@ class UserController extends BaseController
     public function store(Request $request, int $id = null)
     {
         $request->validate([
-            'name'       => 'required|max:255',
-            'password' => 'required',
+            'name'       => ['required', Rule::unique('users')->ignore($id)],
+            'password' => [
+                Rule::requiredIf(function() use($id) {
+                    return empty($id);
+                })
+            ],
             'photo' => 'nullable|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $user = User::updateOrCreate([
-            'id' => $id], [
+        $fields = [
             'name' => $request->input('name'),
-            'password' => $request->input('password')
-        ]);
+        ];
+        if ($request->input('password')) {
+            $fields['password'] = Hash::make($request->input('password'));
+        }
+
+        $user = User::updateOrCreate(['id' => $id], $fields);
 
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');

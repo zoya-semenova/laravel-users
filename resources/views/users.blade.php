@@ -23,7 +23,7 @@
                     </div>
                     <div class="form-group mb-3">
                         <label for="">Пароль</label>
-                        <input type="text" id="password" required class="form-control">
+                        <input type="password" id="password" required class="form-control">
                     </div>
                     <div class="form-group mb-3">
                         <label for="">Фото</label>
@@ -86,7 +86,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Имя</th>
-                                <th>Пароль</th>
+                                <th>Фото</th>
                                 <th>Редактировать</th>
                                 <th>Удалить</th>
                             </tr>
@@ -123,7 +123,7 @@
                             $('tbody').append('<tr>\
                             <td>' + item.id + '</td>\
                             <td>' + item.name + '</td>\
-                            <td>' + item.password + '</td>\
+                            <td>' + (item.photo ? '<img width="50px" height="50px" src="'+item.photo+'"/>' : '') + '</td>\
                             <td><button type="button" value="' + item.id + '" class="btn btn-primary store-btn btn-sm">Редактировать</button></td>\
                             <td><button type="button" value="' + item.id + '" class="btn btn-danger delete-btn btn-sm">Удалить</button></td>\
                         \</tr>');
@@ -151,7 +151,7 @@
                         success: function (response) {
                             // console.log(response.user.name);
                             $('#name').val(response.name);
-                            $('#password').val(response.password);
+                            //$('#password').val(response.password);
                             $('.imgPhoto').attr('src', response.photo);
                             $('#user_id').val(user_id);
                         },
