@@ -64,8 +64,9 @@
                     <div class="form-group mb-3">
                         <label for="">Фото</label>
                         <input type="file" id="photo" class="form-control">
-                        <div>
-                            <img class="imgPreview img img-circle"
+
+                        <div class="mt-3">
+                            <img class="imgPhoto img img-circle"
                                  width="80" src=""/>
                         </div>
                     </div>
@@ -177,7 +178,9 @@
                 var data = new FormData();
                 data.append('name', $('.name').val());
                 data.append('password', $('.password').val());
-                data.append('photo', $('.photo').prop('files')[0]);
+                if ($('.photo').prop('files')[0]) {
+                    data.append('photo', $('.photo').prop('files')[0]);
+                }
 
                 $.ajaxSetup({
                     headers: {
@@ -220,6 +223,8 @@
                 var user_id = $(this).val();
                 // alert(user_id);
                 $('#editModal').modal('show');
+                $('#update_msgList').html("");
+
                 $.ajax({
                     type: "GET",
                     url: "/" + user_id,
@@ -227,6 +232,7 @@
                         // console.log(response.user.name);
                         $('#name').val(response.name);
                         $('#password').val(response.password);
+                        $('.imgPhoto').attr('src', response.photo);
                         $('#user_id').val(user_id);
                     },
                     error: function (response) {
@@ -242,13 +248,16 @@
                 e.preventDefault();
 
                 $(this).text('Отправка...');
+
+                var data = new FormData();
+                data.append('name', $('#name').val());
+                data.append('password', $('#password').val());
+                if ($('#photo').prop('files')[0]) {
+                    data.append('photo', $('#photo').prop('files')[0]);
+                }
+
                 var id = $('#user_id').val();
                 // alert(id);
-
-                var data = {
-                    'name': $('#name').val(),
-                    'password': $('#password').val(),
-                }
 
                 $.ajaxSetup({
                     headers: {
@@ -257,10 +266,13 @@
                 });
 
                 $.ajax({
-                    type: "PUT",
+                    type: "POST",
                     url: "/" + id,
                     data: data,
-                    dataType: "json",
+                    processData: false,
+                    contentType: false,
+                    enctype: 'multipart/form-data',
+                    cache: false,
                     success: function (response) {
                         // console.log(response);
 
@@ -269,13 +281,14 @@
                         $('#success_message').addClass('alert alert-success');
                         $('#success_message').text(response.message);
                         $('#editModal').find('input').val('');
-                        $('.update_user').text('Update');
+                        $('.update_user').text('Сохранить');
                         $('#editModal').modal('hide');
 
                         getUsers(page);
                     },
                     error: function (response) {
                         $('#update_msgList').html("");
+
                         $('#update_msgList').addClass('alert alert-danger');
                         $.each(response.responseJSON.errors, function (key, err_value) {
                             $('#update_msgList').append('<li>' + err_value + '</li>');

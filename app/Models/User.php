@@ -15,5 +15,15 @@ class User extends Model
     protected $fillable = [
         'name',
         'password',
+        'photo'
     ];
+
+    public function getPhotoAttribute($value)
+    {
+        if ($value) {
+            return asset('user-photo/' . $value);
+        } else {
+            return '';
+        }
+    }
 }

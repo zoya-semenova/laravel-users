@@ -33,16 +33,16 @@ class UserController extends BaseController
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function create(Request $request)
+    public function store(Request $request, int $id = null)
     {
         $request->validate([
             'name'       => 'required|max:255',
             'password' => 'required',
-            'photo' => 'required|image|mimes:jpeg,png|max:2048',
+            'photo' => 'nullable|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $user = User::updateOrCreate([
-            'id' => $request->input('id')], [
+            'id' => $id], [
             'name' => $request->input('name'),
             'password' => $request->input('password')
         ]);
@@ -69,7 +69,7 @@ class UserController extends BaseController
         $request->validate([
             'name'       => 'required|max:255',
             'password' => 'required',
-            'photo' => 'required|image|mimes:jpeg,png|max:2048',
+            'photo' => 'nullable|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $user = User::find($id);
@@ -77,6 +77,7 @@ class UserController extends BaseController
         if($user) {
             $user->name = $request->input('name');
             $user->password = $request->input('password');
+
             if ($request->hasFile('photo')) {
                 $photo = $request->file('photo');
                 $fileName = $user->id . "." . $photo->getClientOriginalExtension();
@@ -116,6 +117,6 @@ class UserController extends BaseController
     {
         User::find($id)->delete();
 
-        return response()->json(['success'=>'Запись успешно удалена']);
+        return response()->json(['message'=>'Запись успешно удалена']);
     }
 }
