@@ -2,54 +2,18 @@
 
 @section('content')
 
-    {{-- Add Modal --}}
-    <div class="modal fade" id="AddUserModal" tabindex="-1" aria-labelledby="AddUserModalLabel" aria-hidden="true">
+    {{-- Store Modal --}}
+    <div class="modal fade" id="storeUserModal" tabindex="-1" aria-labelledby="storeModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="AddUserModalLabel">Создать пользователя</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body">
-
-                    <ul id="save_msgList"></ul>
-
-                    <div class="form-group mb-3">
-                        <label for="">Имя</label>
-                        <input type="text" required class="name form-control">
-                        <span class="text-danger error-text name_error"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="">Пароль</label>
-                        <input type="text" required class="password form-control">
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="">Фото</label>
-                        <input type="file" name="photo" class="photo form-control">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                    <button type="button" class="btn btn-primary add_user">Сохранить</button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-
-    {{-- Edit Modal --}}
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Редактировать пользователя</h5>
+                    <h5 class="modal-title" id="storeModalLabel">Создать/Редактировать пользователя</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                 </div>
 
                 <div class="modal-body">
 
-                    <ul id="update_msgList"></ul>
+                    <ul id="modal_msgList"></ul>
 
                     <input type="hidden" id="user_id" />
 
@@ -73,14 +37,13 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                    <button type="submit" class="btn btn-primary update_user">Сохранить</button>
+                    <button type="submit" class="btn btn-primary store_user">Сохранить</button>
                 </div>
 
             </div>
         </div>
     </div>
-    {{-- Edn- Edit Modal --}}
-
+    {{-- Edn- Store Modal --}}
 
     {{-- Delete Modal --}}
     <div class="modal fade" id="DeleteModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -107,14 +70,14 @@
         <div class="row">
             <div class="col-md-12">
 
-                <div id="success_message"></div>
+                <div id="list_message"></div>
 
                 <div class="card">
                     <div class="card-header">
                         <h4>
                             Пользователи
-                            <button id="add" type="button" class="btn btn-primary float-end" data-bs-toggle="modal"
-                                    data-bs-target="#AddUserModal">Добавить пользователя</button>
+                            <button id="add" type="button" class="btn btn-primary float-end store-btn" data-bs-toggle="modal"
+                                    data-bs-target="#storeUserModal">Добавить пользователя</button>
                         </h4>
                     </div>
                     <div class="card-body">
@@ -161,7 +124,7 @@
                             <td>' + item.id + '</td>\
                             <td>' + item.name + '</td>\
                             <td>' + item.password + '</td>\
-                            <td><button type="button" value="' + item.id + '" class="btn btn-primary edit-btn btn-sm">Редактировать</button></td>\
+                            <td><button type="button" value="' + item.id + '" class="btn btn-primary store-btn btn-sm">Редактировать</button></td>\
                             <td><button type="button" value="' + item.id + '" class="btn btn-danger delete-btn btn-sm">Удалить</button></td>\
                         \</tr>');
                         });
@@ -170,84 +133,39 @@
                 });
             }
 
-            $('.add_user').on('click', function (e) {
+            $(document).on('click', '.store-btn', function (e) {
                 e.preventDefault();
 
-                $(this).text('Отправка...');
-
-                var data = new FormData();
-                data.append('name', $('.name').val());
-                data.append('password', $('.password').val());
-                if ($('.photo').prop('files')[0]) {
-                    data.append('photo', $('.photo').prop('files')[0]);
-                }
-
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-
-                $.ajax({
-                    type: "POST",
-                    url: "/",
-                    data: data,
-                    processData: false,
-                    contentType: false,
-                    enctype: 'multipart/form-data',
-                    cache: false,
-                    success: function (response) {
-                        // console.log(response);
-                        $('#save_msgList').html("");
-                        $('#success_message').addClass('alert alert-success');
-                        $('#success_message').text(response.message);
-                        $('#AddUserModal').find('input').val('');
-                        $('.add_user').text('Сохранить');
-                        $('#AddUserModal').modal('hide');
-
-                        getUsers(page);
-                    },
-                    error: function (response) {
-                        $('#save_msgList').html("");
-                        $('#save_msgList').addClass('alert alert-danger');
-                        $.each(response.responseJSON.errors, function (key, err_value) {
-                            $('#save_msgList').append('<li>' + err_value + '</li>');
-                        });
-                        $('.add_user').text('Сохранить');
-                    }
-                });
-            });
-
-            $(document).on('click', '.edit-btn', function (e) {
-                e.preventDefault();
                 var user_id = $(this).val();
                 // alert(user_id);
-                $('#editModal').modal('show');
-                $('#update_msgList').html("");
+                $('#modal_msgList').html("");
+                $('#modal_msgList').removeClass("alert alert-success alert-danger");
+                $('#storeUserModal').find('input').val('');
+                $('#storeUserModal').find('img').attr('src', '');
+                $('#storeUserModal').modal('show');
 
-                $.ajax({
-                    type: "GET",
-                    url: "/" + user_id,
-                    success: function (response) {
-                        // console.log(response.user.name);
-                        $('#name').val(response.name);
-                        $('#password').val(response.password);
-                        $('.imgPhoto').attr('src', response.photo);
-                        $('#user_id').val(user_id);
-                    },
-                    error: function (response) {
-                        $('#success_message').addClass('alert alert-success');
-                        $('#success_message').text(response.message);
-                        $('#editModal').modal('hide');
-                    }
-                });
-                //$('.btn-close').find('input').val('');
+                if (user_id) {
+                    $.ajax({
+                        type: "GET",
+                        url: "/" + user_id,
+                        success: function (response) {
+                            // console.log(response.user.name);
+                            $('#name').val(response.name);
+                            $('#password').val(response.password);
+                            $('.imgPhoto').attr('src', response.photo);
+                            $('#user_id').val(user_id);
+                        },
+                        error: function (response) {
+                            $('#list_message').addClass('alert alert-success');
+                            $('#list_message').text(response.message);
+                            $('#storeUserModal').modal('hide');
+                        }
+                    });
+                }
             });
 
-            $(document).on('click', '.update_user', function (e) {
+            $(document).on('click', '.store_user', function (e) {
                 e.preventDefault();
-
-                $(this).text('Отправка...');
 
                 var data = new FormData();
                 data.append('name', $('#name').val());
@@ -267,7 +185,7 @@
 
                 $.ajax({
                     type: "POST",
-                    url: "/" + id,
+                    url: "/" + (id ? id : ''),
                     data: data,
                     processData: false,
                     contentType: false,
@@ -276,24 +194,18 @@
                     success: function (response) {
                         // console.log(response);
 
-                        $('#update_msgList').html("");
-
-                        $('#success_message').addClass('alert alert-success');
-                        $('#success_message').text(response.message);
-                        $('#editModal').find('input').val('');
-                        $('.update_user').text('Сохранить');
-                        $('#editModal').modal('hide');
+                        $('#list_message').addClass('alert alert-success');
+                        $('#list_message').text(response.message);
+                        $('#storeUserModal').modal('hide');
 
                         getUsers(page);
                     },
                     error: function (response) {
-                        $('#update_msgList').html("");
 
-                        $('#update_msgList').addClass('alert alert-danger');
+                        $('#modal_msgList').addClass('alert alert-danger');
                         $.each(response.responseJSON.errors, function (key, err_value) {
-                            $('#update_msgList').append('<li>' + err_value + '</li>');
+                            $('#modal_msgList').append('<li>' + err_value + '</li>');
                         });
-                        $('.update_user').text('Сохранить');
                     }
                 });
             });
@@ -322,17 +234,17 @@
                     dataType: "json",
                     success: function (response) {
                         // console.log(response);
-                        $('#success_message').html("");
-                        $('#success_message').addClass('alert alert-success');
-                        $('#success_message').text(response.message);
+                        $('#list_message').html("");
+                        $('#list_message').addClass('alert alert-success');
+                        $('#list_message').text(response.message);
                         $('.delete_user').text('Удалено');
                         $('#DeleteModal').modal('hide');
 
                         getUsers(page);
                     },
                     error: function (response) {
-                        $('#success_message').addClass('alert alert-success');
-                        $('#success_message').text(response.message);
+                        $('#list_message').addClass('alert alert-success');
+                        $('#list_message').text(response.message);
                         $('.delete_user').text('Удалить');
                     }
 

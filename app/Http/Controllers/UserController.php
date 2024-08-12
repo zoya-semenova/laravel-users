@@ -55,42 +55,8 @@ class UserController extends BaseController
             $user->update(['photo' => $fileName]);
         }
 
-        return response()->json(['message'=>'Запись успешно создана','data' => $user], 200);
+        return response()->json(['message'=>'Успешно','data' => $user], 200);
 
-    }
-
-    /**
-     * @param  \Illuminate\Http\Request  $request
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function update(Request $request, int $id)
-    {
-        $request->validate([
-            'name'       => 'required|max:255',
-            'password' => 'required',
-            'photo' => 'nullable|mimes:jpg,jpeg,png|max:2048',
-        ]);
-
-        $user = User::find($id);
-
-        if($user) {
-            $user->name = $request->input('name');
-            $user->password = $request->input('password');
-
-            if ($request->hasFile('photo')) {
-                $photo = $request->file('photo');
-                $fileName = $user->id . "." . $photo->getClientOriginalExtension();
-                $request->file('photo')->move(public_path('user-photo'), $fileName);
-                $user->photo = $fileName;
-            }
-
-            $user->update();
-
-            return response()->json(['message' => 'Запись успешно обновлена', 'data' => $user], 200);
-        }
-
-        return response()->json(['message'=>'Not found'], 422);
     }
 
     /**
